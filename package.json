@@ -1,0 +1,28 @@
+{
+  "name": "@drawingonhumanity/passwordgenerator",
+  "version": "1.0.2",
+  "author": "Jamie Miller",
+  "organization": "Drawing on Humanity",
+  "license": "MIT",
+  "description": "A lightweight, locally-run Node.js CLI tool for generating secure, high-entropy passwords—without relying on untrusted websites or opaque algorithms.",
+  "type": "module",
+  "bin": {
+    "generate": "generate.js"
+  },
+  "dependencies": {
+    "chalk": "^5.6.0",
+    "clipboardy": "^4.0.0"
+  },
+  "keywords": [
+    "password",
+    "generator",
+    "secure",
+    "cli",
+    "entropy",
+    "privacy",
+    "drawingonhumanity",
+    "tooling",
+    "legacy",
+    "resilience"
+  ]
+}

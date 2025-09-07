@@ -1,0 +1,128 @@
+#!/usr/bin/env node
+
+// Author: Jamie Miller              
+// Organization: Drawing on Humanity 
+// Date: September 4, 2025           
+
+//Dependencies
+import chalk from 'chalk';
+import clipboard from 'clipboardy';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+//Chalk Colors
+const success = chalk.bold.green;
+const info = chalk.bold.cyan;
+const error = chalk.bold.red;
+const highlight = chalk.bold.yellow;
+
+// Character sets
+const charset = {
+  letters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  numbers: '0123456789',
+  symbols: '!$&()-_=+[]|:.<>?/',
+  setArray: function () { return [this.letters, this.numbers, this.symbols]; }
+}
+
+const validFlags = ["-l", "-n", "-s", "-ln", "-ls", "-ns"];
+
+const gradeMap = [
+  [60, "F - WEAK"],
+  [70, "D - WEAK"],
+  [80, "C - MODERATE"],
+  [90, "B - MODERATE"],
+  [100, "A - STRONG"],
+  [Infinity, "A+ - VERY STRONG"]
+];
+const args = process.argv.slice(2);
+const argObj = {
+  command: '',
+  length: 0,
+  flag: '',
+  charsetLength: charset.setArray().join('').length
+}
+
+//Functions
+function processError(type, message) {
+  console.log(error(type, message));
+  process.exit(1);
+}
+function validateCommand(args){
+  if (args[0] === '--help') {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    if (args.includes('--help')) {
+      try {
+        const readmePath = path.join(__dirname, 'help.txt');
+        const helpText = fs.readFileSync(readmePath, 'utf8');
+        console.log(helpText);
+      } catch (err) {
+        console.log(error('FILE READ ERROR. Error reading help.txt:'));
+      }
+    }
+    process.exit(0);
+  }
+  if (args[0] === 'pw') {
+    argObj.command = args[0];
+  } else {
+    processError("COMMAND ERROR",`generate ${highlight("pw")} <length> [ ${validFlags} ]`);
+  }
+  if (!isNaN(parseInt(args[1],10))){
+    argObj.length = parseInt(args[1],10);
+  } else {
+    processError("PASSWORD LENGTH ERROR",`generate pw ${highlight('<length>')} [ ${validFlags} ]`);
+  }
+  let selectedFlags = args.slice(2).filter(f => validFlags.includes(f));
+  if (selectedFlags.length > 1) {
+    processError("FLAG LIMIT ERROR",`generate pw <length> ${highlight('['+validFlags+']')}. (Limit 1 flag)`);
+  } else {
+    if (args.slice(2).length > 0 && selectedFlags.length === 0) {
+      processError("INVALID FLAG ERROR",`generate pw <length> ${highlight('['+validFlags+']')}. (Limit 1 flag)`);
+    } else {
+      argObj.flag = selectedFlags[0];
+    }
+  }
+}
+function generatePassword(length) {
+  let password = '';
+  let activeSet = [...charset.setArray()];
+  if(argObj.flag) {
+   activeSet = updateCharset(activeSet);
+   
+  }
+  let characterSetString = activeSet.join('');
+  argObj.charsetLength = characterSetString.length;
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characterSetString.length);
+    password += characterSetString[randomIndex];
+  }
+  return password;
+}
+function updateCharset(set) {
+  if(!argObj.flag.includes("l")) set.splice(set.indexOf(charset.letters),1);
+  if(!argObj.flag.includes("n")) set.splice(set.indexOf(charset.numbers),1);
+  if(!argObj.flag.includes("s")) set.splice(set.indexOf(charset.symbols),1);
+  return set;
+}
+function generatePasswordRating(length){
+  let e = Math.round(Math.log2(argObj.charsetLength)*length);
+  let s = Math.round((e/125) * 100);
+  let g = gradeMap.find(([threshold]) => s < threshold)[1];
+  return {entropy: e, grade: g}
+}
+function generateOutput(password, rating){
+  console.log(success(`Generated Password: ${password}`));
+  console.log(info(`Password Strength: ${rating.entropy} ${rating.grade}`));
+}
+function writeToClipboard(string){
+  clipboard.writeSync(string);
+  console.log(highlight(`Password copied to clipboard.`));
+}
+//__MAIN_APP_FLOW___
+  validateCommand(args);
+  const password = generatePassword(argObj.length);
+  const rating = generatePasswordRating(argObj.length);
+  generateOutput(password, rating);
+  writeToClipboard(password);
