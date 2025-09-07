@@ -69,9 +69,7 @@ generate --help
 Author: Jamie Miller  
 Organization: Drawing on Humanity  
 Date: September 4, 2025  
-License: Copyrighted Material
-	 ©2025 - Jamie Miller
-         All Rights Reserved
+License: MIT
 
 💬 Notes
 - This tool runs entirely locally—no data is sent or stored.
